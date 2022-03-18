@@ -1,23 +1,23 @@
 version: '2'
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+  zookeeper-tls-sasl:
+    image: confluentinc/cp-zookeeper:7.0.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_SASL_ENABLED: "false"
 
-  kafka:
-    image: confluentinc/cp-kafka:latest
+  kafka-tls-sasl:
+    image: confluentinc/cp-kafka:7.0.0
     depends_on:
-      - zookeeper
+      - ookeeper-tls-sasl
     ports:
       - 9092:9092
       - 19092:19092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_CONNECT: ookeeper-tls-sasl:2181
       KAFKA_ZOOKEEPER_SASL_CLIENT: false
       ZOOKEEPER_SASL_ENABLED: false
 
