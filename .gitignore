@@ -16,3 +16,12 @@
 /kafka-tls-sasl/secrets/*_creds
 /kafka-tls-sasl/secrets/*.key
 /kafka-tls-sasl/secrets/*.srl
+kafka-sasl/configs/kafka.properties
+kafka-sasl/configs/log4j.properties
+kafka-sasl/configs/tools-log4j.properties
+kafka-tls-sasl/configs/kafka.properties
+kafka-tls-sasl/configs/log4j.properties
+kafka-tls-sasl/configs/tools-log4j.properties
+kafka-tls/configs/tools-log4j.properties
+kafka-tls/configs/log4j.properties
+kafka-tls/configs/kafka.properties

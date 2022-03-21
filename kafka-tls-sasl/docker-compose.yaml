@@ -1,0 +1,99 @@
+---
+version: "3"
+services:
+  zookeeper-tls-sasl:
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper-tls-sasl
+    networks:
+       kafka:
+          aliases:
+            - zookeeper.local
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
+      ZOOKEEPER_LOG4J_LOGLEVEL: ERROR
+    volumes:
+      - zk-tls-sasl-data:/var/lib/zookeeper/data
+      - zk-tls-sasl-txn-logs:/var/lib/zookeeper/log
+    
+  broker-tls-sasl:
+    image: confluentinc/cp-enterprise-kafka:5.3.1
+    container_name: broker-tls-sasl
+    networks:
+       kafka:
+          aliases:
+            - broker.local
+    depends_on:
+      - zookeeper-tls-sasl
+    ports:
+      - "19092:19092"
+      - "39092:39092"
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGLEVEL: ERROR
+      
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:22181
+      KAFKA_ZOOKEEPER_SASL_CLIENT: false
+      ZOOKEEPER_SASL_ENABLED: false
+
+      KAFKA_ADVERTISED_LISTENERS: SSL://localhost:19092,SASL_SSL://localhost:39092
+      
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: broker_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_LISTENER_NAME_INTERNAL_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    volumes:
+      - kafka-tls-sasl-data:/var/lib/kafka/data
+      - ./secrets:/etc/kafka/secrets
+      - ./configs:/etc/kafka/
+
+
+  kafka-tools:
+    build:
+      context: ./kafka-tools
+    depends_on:
+      - broker-tls-sasl
+    container_name: kafka-tools
+    networks:
+       kafka:
+          aliases:
+            - kafka-tools.local
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_SECURITY_PROTOCOL: SSL
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka-tools.truststore.jks
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka-tools.keystore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: 123456
+      KAFKA_SSL_KEYSTORE_PASSWORD: 123456
+      KAFKA_SSL_KEY_PASSWORD: 123456
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+      - ./kafka-tools-config:/etc/kafka/config
+
+volumes:
+  zk-tls-sasl-data:
+    external: true
+  zk-tls-sasl-txn-logs:
+    external: true
+  kafka-tls-sasl-data:
+    external: true
+
+networks:
+  kafka:

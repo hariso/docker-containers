@@ -1,0 +1,92 @@
+---
+version: "3"
+services:
+  zookeeper-tls:
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper-tls
+    networks:
+       kafka-tls:
+          aliases:
+            - zookeeper.local
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
+      ZOOKEEPER_LOG4J_LOGLEVEL: ERROR
+    volumes:
+      - zk-tls-data:/var/lib/zookeeper/data
+      - zk-tls-txn-logs:/var/lib/zookeeper/log
+    
+  broker-tls:
+    image: confluentinc/cp-enterprise-kafka:5.3.1
+    container_name: broker-tls
+    networks:
+       kafka-tls:
+          aliases:
+            - broker.local
+    depends_on:
+      - zookeeper-tls
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGLEVEL: ERROR
+      
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:22181
+
+      KAFKA_ADVERTISED_LISTENERS: SSL://localhost:19092
+      
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: broker_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_LISTENER_NAME_INTERNAL_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka-tls-data:/var/lib/kafka/data
+      - ./secrets:/etc/kafka/secrets
+      - ./configs:/etc/kafka/
+
+
+  kafka-tools-tls:
+    build:
+      context: ./kafka-tools
+    depends_on:
+      - broker-tls
+    container_name: kafka-tools-tls
+    networks:
+       kafka-tls:
+          aliases:
+            - kafka-tools.local
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_SECURITY_PROTOCOL: SSL
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka-tools.truststore.jks
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.kafka-tools.keystore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: 123456
+      KAFKA_SSL_KEYSTORE_PASSWORD: 123456
+      KAFKA_SSL_KEY_PASSWORD: 123456
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+      - ./kafka-tools-config:/etc/kafka/config
+
+volumes:
+  zk-tls-data:
+    external: true
+  zk-tls-txn-logs:
+    external: true
+  kafka-tls-data:
+    external: true
+
+networks:
+  kafka-tls:

@@ -1,0 +1,85 @@
+---
+version: "3"
+services:
+  zookeeper-sasl:
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper-sasl
+    networks:
+       kafka-sasl:
+          aliases:
+            - zookeeper.local
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
+      ZOOKEEPER_LOG4J_LOGLEVEL: ERROR
+      ZOOKEEPER_SASL_ENABLED: "false"
+
+    volumes:
+      - zk-sasl-data:/var/lib/zookeeper/data
+      - zk-sasl-txn-logs:/var/lib/zookeeper/log
+    
+  broker-sasl:
+    image: confluentinc/cp-enterprise-kafka:5.3.1
+    container_name: broker-sasl
+    networks:
+       kafka-sasl:
+          aliases:
+            - broker.local
+    depends_on:
+      - zookeeper-sasl
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGLEVEL: ERROR
+      
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:2181
+      ZOOKEEPER_SASL_ENABLED: "false"
+    
+
+      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,SASL_PLAINTEXT://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,SASL_PLAINTEXT://:29092
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+      
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    volumes:
+      - kafka-sasl-data:/var/lib/kafka/data
+      - ./configs:/etc/kafka/
+
+
+  kafka-tools-sasl:
+    build:
+      context: ./kafka-tools-sasl
+    depends_on:
+      - broker
+    container_name: kafka-tools-sasl
+    networks:
+       kafka-sasl:
+          aliases:
+            - kafka-tools.local
+    environment:
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+      - ./kafka-tools-config:/etc/kafka/config
+
+volumes:
+  zk-sasl-data:
+    external: true
+  zk-sasl-txn-logs:
+    external: true
+  kafka-sasl-data:
+    external: true
+
+networks:
+  kafka-sasl:
