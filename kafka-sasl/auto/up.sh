@@ -5,12 +5,12 @@ cd "$(dirname "$0"..)" || exit
 
 echo "🔊  Setting up some volumes for persistence."
 
-docker volume create --name zk-sasl-data > /dev/null
-docker volume create --name zk-sasl-txn-logs > /dev/null
-docker volume create --name kafka-sasl-data > /dev/null
+docker volume create --name zk-tls-sasl-data > /dev/null
+docker volume create --name zk-tls-sasl-txn-logs > /dev/null
+docker volume create --name kafka-tls-sasl-data > /dev/null
 
 # Don't need kafka-tools to start up
-docker-compose up --detach --scale kafka-tools-sasl=0
+docker-compose up --detach --scale kafka-tools=0
 
 echo ""
 echo "🐳  Kicked off the containers. Should be up in one minute (literally)."

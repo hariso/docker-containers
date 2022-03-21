@@ -3,4 +3,4 @@ set -euf -o pipefail
 
 cd "$(dirname "$0"..)" || exit
 
-docker-compose run --rm --name=kafka-tools-sasl kafka-tools-sasl "$@"
+docker-compose run --rm --name=kafka-tools kafka-tools "$@"

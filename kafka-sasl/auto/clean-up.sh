@@ -7,6 +7,6 @@ cd "$(dirname "$0")/.." || exit
 
 echo "💣  Deleting volumes for a clean slate."
 
-docker volume rm zk-sasl-data > /dev/null
-docker volume rm zk-sasl-txn-logs > /dev/null
-docker volume rm kafka-sasl-data > /dev/null
+docker rm zk-tls-sasl-data > /dev/null
+docker rm zk-tls-sasl-txn-logs > /dev/null
+docker rm kafka-tls-sasl-data > /dev/null
