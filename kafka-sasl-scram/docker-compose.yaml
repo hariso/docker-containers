@@ -1,0 +1,61 @@
+---
+version: "3"
+services:
+  zookeeper-sasl-scram:
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper-sasl-scram
+    networks:
+       kafka-scram:
+          aliases:
+            - zookeeper.local
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zk-sasl-scram-data:/var/lib/zookeeper/data
+      - zk-sasl-scram-txn-logs:/var/lib/zookeeper/log
+    
+  broker-sasl-scram:
+    image: confluentinc/cp-enterprise-kafka:5.3.1
+    container_name: broker-sasl-scram
+    networks:
+       kafka-scram:
+          aliases:
+            - broker.local
+    depends_on:
+      - zookeeper-sasl-scram
+    ports:
+      - "9092:9092"
+      - "49092:49092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:2181
+      KAFKA_ZOOKEEPER_SASL_CLIENT: false
+      ZOOKEEPER_SASL_ENABLED: false
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+
+      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,SASL_PLAINTEXT://localhost:49092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,SASL_PLAINTEXT://localhost:49092
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: PLAINTEXT
+      
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    volumes:
+      - kafka-sasl-scram-data:/var/lib/kafka/data
+      - ./configs:/etc/kafka/
+
+volumes:
+  zk-sasl-scram-data:
+    external: true
+  zk-sasl-scram-txn-logs:
+    external: true
+  kafka-sasl-scram-data:
+    external: true
+
+networks:
+  kafka-scram:

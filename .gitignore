@@ -25,3 +25,6 @@ kafka-tls-sasl/configs/tools-log4j.properties
 kafka-tls/configs/tools-log4j.properties
 kafka-tls/configs/log4j.properties
 kafka-tls/configs/kafka.properties
+kafka-sasl-scram/configs/tools-log4j.properties
+kafka-sasl-scram/configs/log4j.properties
+kafka-sasl-scram/configs/kafka.properties
