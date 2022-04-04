@@ -1,9 +1,9 @@
 ---
 version: "3"
 services:
-  zookeeper-tls-sasl:
+  zookeeper-sasl:
     image: confluentinc/cp-zookeeper:5.3.1
-    container_name: zookeeper-tls-sasl
+    container_name: zookeeper-sasl
     networks:
        kafka:
           aliases:
@@ -15,18 +15,18 @@ services:
       ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
       ZOOKEEPER_LOG4J_LOGLEVEL: ERROR
     volumes:
-      - zk-tls-sasl-data:/var/lib/zookeeper/data
-      - zk-tls-sasl-txn-logs:/var/lib/zookeeper/log
+      - zk-sasl-data:/var/lib/zookeeper/data
+      - zk-sasl-txn-logs:/var/lib/zookeeper/log
     
-  broker-tls-sasl:
+  broker-sasl:
     image: confluentinc/cp-enterprise-kafka:5.3.1
-    container_name: broker-tls-sasl
+    container_name: broker-sasl
     networks:
        kafka:
           aliases:
             - broker.local
     depends_on:
-      - zookeeper-tls-sasl
+      - zookeeper-sasl
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -36,8 +36,8 @@ services:
       
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:22181
-      KAFKA_ZOOKEEPER_SASL_CLIENT: false
-      ZOOKEEPER_SASL_ENABLED: false
+      KAFKA_ZOOKEEPER_SASL_CLIENT: "false"
+      ZOOKEEPER_SASL_ENABLED: "false"
 
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,SASL_PLAINTEXT://localhost:29092
       
@@ -47,12 +47,14 @@ services:
       
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
       
       KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
     volumes:
-      - kafka-tls-sasl-data:/var/lib/kafka/data
+      - kafka-sasl-data:/var/lib/kafka/data
       - ./secrets:/etc/kafka/secrets
       - ./configs:/etc/kafka/
 
@@ -61,7 +63,7 @@ services:
     build:
       context: ./kafka-tools
     depends_on:
-      - broker-tls-sasl
+      - broker-sasl
     container_name: kafka-tools
     networks:
        kafka:
@@ -76,11 +78,11 @@ services:
       - ./kafka-tools-config:/etc/kafka/config
 
 volumes:
-  zk-tls-sasl-data:
+  zk-sasl-data:
     external: true
-  zk-tls-sasl-txn-logs:
+  zk-sasl-txn-logs:
     external: true
-  kafka-tls-sasl-data:
+  kafka-sasl-data:
     external: true
 
 networks:
