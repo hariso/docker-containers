@@ -36,8 +36,8 @@ services:
       
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:22181
-      KAFKA_ZOOKEEPER_SASL_CLIENT: false
-      ZOOKEEPER_SASL_ENABLED: false
+      KAFKA_ZOOKEEPER_SASL_CLIENT: "false"
+      ZOOKEEPER_SASL_ENABLED: "false"
 
       KAFKA_ADVERTISED_LISTENERS: SSL://localhost:19092,SASL_SSL://localhost:39092
       
@@ -89,11 +89,11 @@ services:
 
 volumes:
   zk-tls-sasl-data:
-    external: true
+    external: "true"
   zk-tls-sasl-txn-logs:
-    external: true
+    external: "true"
   kafka-tls-sasl-data:
-    external: true
+    external: "true"
 
 networks:
   kafka:
