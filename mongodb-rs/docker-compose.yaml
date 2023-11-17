@@ -1,21 +1,44 @@
-version: '3.4'
+version: '3.8'
 
 services:
-  mongodb:
+  mongo-primary:
     image: mongo
-    hostname: mongodb
-    restart: always
-    container_name: mongodb
+    container_name: mongo-primary
     ports:
-      - 27017:27017
-    networks:
-      - mongo-network
-    healthcheck:
-      test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u mongo -p mongo --quiet) -eq 1
-      interval: 10s
-      start_period: 30s
-    command: ["--replSet", "dbrs", "--bind_ip_all"]
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+      REPLICASET: rs0
+    command: mongod --replSet rs0 --bind_ip_all --keyFile /opt/mongo/mongo-keyfile
+    volumes:
+      - ./mongo-keyfile:/opt/mongo/mongo-keyfile
 
-networks:
-  mongo-network:
-    driver: bridge
+  mongo-secondary:
+    image: mongo
+    container_name: mongo-secondary
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+      REPLICASET: rs0
+    command: mongod --replSet rs0 --bind_ip_all --keyFile /opt/mongo/mongo-keyfile
+    depends_on:
+      - mongo-primary
+    volumes:
+      - ./mongo-keyfile:/opt/mongo/mongo-keyfile
+
+  mongo-arbiter:
+    image: mongo
+    container_name: mongo-arbiter
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+      REPLICASET: rs0
+    command: mongod --replSet rs0 --bind_ip_all --keyFile /opt/mongo/mongo-keyfile
+    depends_on:
+      - mongo-primary
+    volumes:
+      - ./mongo-keyfile:/opt/mongo/mongo-keyfile
