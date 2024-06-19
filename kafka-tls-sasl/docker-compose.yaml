@@ -2,7 +2,7 @@
 version: "3"
 services:
   zookeeper-tls-sasl:
-    image: confluentinc/cp-zookeeper:7.0.0
+    image: confluentinc/cp-zookeeper:7.4.0
     user: "0:0"
     container_name: zookeeper-tls-sasl
     networks:
@@ -20,7 +20,7 @@ services:
       - zk-tls-sasl-txn-logs:/var/lib/zookeeper/log
     
   broker-tls-sasl:
-    image: confluentinc/cp-kafka:7.0.0
+    image: confluentinc/cp-kafka:7.4.0
     user: "0:0"
     container_name: broker-tls-sasl
     networks:
